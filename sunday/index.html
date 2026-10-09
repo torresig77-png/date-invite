@@ -230,24 +230,17 @@ textarea{resize:vertical;min-height:72px}
     const choice=form.date.value;
     if(!choice){status.className="status err";status.textContent="Pick one of the two dates first.";return;}
     const data={choice,time:form.time.value||"",extra:$("extra").value.trim(),note:$("note").value.trim()};
-    const cfg=window.JOTFORM||{};
-    if(!cfg.formId||cfg.formId==="PASTE_FORM_ID"){
-      status.className="status err";
-      status.textContent="Almost ready! The Jotform form ID still needs to be added to config.js.";
-      return;
-    }
+    const endpoint=window.FORMSPREE_URL;
     const fd=new FormData();
-    fd.append("formID",cfg.formId);
-    fd.append("simple_spc",cfg.formId+"-"+cfg.formId);
-    const f=cfg.fields||{};
-    if(f.date)  fd.append(f.date,  labels[choice]);
-    if(f.time)  fd.append(f.time,  data.time);
-    if(f.extra) fd.append(f.extra, data.extra);
-    if(f.note)  fd.append(f.note,  data.note);
+    fd.append("Date pick",labels[choice]);
+    fd.append("Best time",data.time);
+    fd.append(choice==="paint"?"Playlist song":"Snack or game",data.extra||"—");
+    fd.append("Anything else",data.note||"—");
+    fd.append("_subject","Sunday date pick: "+labels[choice]+" ("+data.time+")");
     send.disabled=true; status.textContent="Sending…";
     try{
-      // Jotform doesn't allow reading the reply from another site, so a sent request counts as success.
-      await fetch("https://submit.jotform.com/submit/"+cfg.formId,{method:"POST",mode:"no-cors",body:fd});
+      const res=await fetch(endpoint,{method:"POST",body:fd,headers:{Accept:"application/json"}});
+      if(!res.ok) throw new Error("bad status "+res.status);
       status.textContent="Locked in. See you Sunday!";
       showSaved(data); confetti();
       form.querySelectorAll("input,textarea,button").forEach(el=>el.disabled=true);
