@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Pick Our Sunday</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shrikhand&family=Outfit:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: one narrow column — headline, two big tappable date cards (gingham / paint), then a few playful extras and a send button. */
+:root{
+  --bg:#eef3ff; --ink:#1d2340; --muted:#5b6386; --card:#ffffff; --line:#d4dbf2;
+  --picnic:#e8453c; --picnic-soft:#fde3e1; --paint:#6c4cf0; --paint-soft:#e9e3ff;
+  --sun:#ffc23d; --ok:#1f9d6b;
+  --display:"Shrikhand", "Cooper Black", Georgia, serif;
+  --body:"Outfit", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141831; --ink:#eef0ff; --muted:#a3a9cc; --card:#1e2344; --line:#343b66;
+  --picnic:#ff6b62; --picnic-soft:#3a2230; --paint:#9c84ff; --paint-soft:#2b2654;
+  --sun:#ffcf5c; --ok:#3fcf95; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141831; --ink:#eef0ff; --muted:#a3a9cc; --card:#1e2344; --line:#343b66;
+  --picnic:#ff6b62; --picnic-soft:#3a2230; --paint:#9c84ff; --paint-soft:#2b2654;
+  --sun:#ffcf5c; --ok:#3fcf95; color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5}
+.wrap{max-width:560px;margin:0 auto;padding-inline:18px;padding-block:28px 48px;display:flex;flex-direction:column;gap:22px}
+.eyebrow{font-size:.78rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:8px}
+.eyebrow .dot{width:10px;height:10px;border-radius:50%;background:var(--sun)}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(2.3rem,9vw,3.2rem);line-height:1.02;margin:6px 0 0;text-wrap:balance}
+h1 em{font-style:normal;color:var(--picnic)}
+.lede{margin:8px 0 0;color:var(--muted);max-width:42ch}
+
+.choices{display:grid;gap:14px}
+.opt{position:relative;display:block;cursor:pointer;border-radius:20px;border:2px solid var(--line);background:var(--card);overflow:hidden;transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease}
+.opt input{position:absolute;opacity:0;pointer-events:none}
+.opt:hover{transform:translateY(-2px)}
+.opt:has(input:focus-visible){outline:3px solid var(--sun);outline-offset:3px}
+.art{height:110px;position:relative}
+.picnic .art{background-color:var(--picnic-soft);
+  background-image:linear-gradient(90deg,color-mix(in srgb,var(--picnic) 45%,transparent) 50%,transparent 50%),
+                   linear-gradient(color-mix(in srgb,var(--picnic) 45%,transparent) 50%,transparent 50%);
+  background-size:28px 28px}
+.paint .art{background:var(--paint-soft)}
+.paint canvas{width:100%;height:100%;display:block}
+.dice{position:absolute;right:18px;bottom:-18px;width:54px;height:54px;border-radius:12px;background:var(--card);border:2px solid var(--ink);display:grid;grid-template-columns:repeat(3,1fr);padding:8px;gap:2px;transform:rotate(-10deg)}
+.dice i{width:8px;height:8px;border-radius:50%;background:var(--ink);place-self:center}
+.dice i.x{background:transparent}
+.glass{position:absolute;right:20px;bottom:-14px;font-size:0}
+.body{padding:18px 18px 18px;display:flex;flex-direction:column;gap:6px}
+.tag{font-size:.75rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
+.picnic .tag{color:var(--picnic)} .paint .tag{color:var(--paint)}
+.opt h2{font-family:var(--display);font-weight:400;font-size:1.6rem;line-height:1.1;margin:0}
+.opt p{margin:0;color:var(--muted);font-size:.95rem}
+.check{position:absolute;top:12px;left:12px;width:34px;height:34px;border-radius:50%;background:var(--card);border:2px solid var(--line);display:grid;place-items:center;font-weight:700;color:transparent;transition:all .15s ease}
+.picnic:has(input:checked){border-color:var(--picnic);box-shadow:0 8px 0 -2px var(--picnic)}
+.paint:has(input:checked){border-color:var(--paint);box-shadow:0 8px 0 -2px var(--paint)}
+.picnic:has(input:checked) .check{background:var(--picnic);border-color:var(--picnic);color:#fff}
+.paint:has(input:checked) .check{background:var(--paint);border-color:var(--paint);color:#fff}
+
+.extras{display:flex;flex-direction:column;gap:16px;background:var(--card);border:2px solid var(--line);border-radius:20px;padding:18px}
+.extras h3{margin:0;font-family:var(--display);font-weight:400;font-size:1.3rem}
+.field{display:flex;flex-direction:column;gap:8px}
+.field > span{font-weight:600}
+.pills{display:flex;flex-wrap:wrap;gap:8px}
+.pill{position:relative}
+.pill input{position:absolute;opacity:0}
+.pill span{display:inline-block;padding:8px 14px;border-radius:999px;border:2px solid var(--line);font-weight:500;cursor:pointer}
+.pill input:checked + span{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.pill input:focus-visible + span{outline:3px solid var(--sun);outline-offset:2px}
+input[type=text],textarea{font:inherit;color:var(--ink);background:var(--bg);border:2px solid var(--line);border-radius:12px;padding:10px 12px;width:100%}
+input[type=text]:focus,textarea:focus{outline:none;border-color:var(--paint)}
+textarea{resize:vertical;min-height:72px}
+.hint{font-size:.85rem;color:var(--muted)}
+
+.send{font:inherit;font-family:var(--display);font-size:1.35rem;border:none;border-radius:16px;padding:14px 18px;background:var(--ink);color:var(--bg);cursor:pointer;box-shadow:0 6px 0 var(--sun);transition:transform .1s ease}
+.send:active{transform:translateY(3px);box-shadow:0 3px 0 var(--sun)}
+.send:disabled{opacity:.5;cursor:not-allowed}
+.send:focus-visible{outline:3px solid var(--paint);outline-offset:3px}
+.status{font-weight:500;min-height:1.5em;margin:0}
+.status.err{color:var(--picnic)}
+
+.saved{border-radius:20px;padding:18px;background:var(--card);border:2px dashed var(--ok);display:flex;flex-direction:column;gap:6px}
+.saved .tag{color:var(--ok)}
+.saved b{font-family:var(--display);font-weight:400;font-size:1.4rem}
+.saved p{margin:0;color:var(--muted)}
+
+.confetti{position:fixed;inset:0;pointer-events:none;z-index:5}
+@media (prefers-reduced-motion: reduce){.opt,.send,.check{transition:none}.opt:hover{transform:none}}
+</style>
+</head>
+<body>
+
+<script src="config.js"></script>
+<canvas class="confetti" id="confetti" aria-hidden="true"></canvas>
+<main class="wrap">
+  <header>
+    <div class="eyebrow"><span class="dot"></span>Sunday, October 11</div>
+    <h1>Pick our <em>Sunday</em> date</h1>
+    <p class="lede">Two plans, both ready to go. Tap the one you're feeling and I'll handle the rest.</p>
+  </header>
+
+  <form id="form" novalidate>
+    <div class="choices" role="radiogroup" aria-label="Date idea">
+      <label class="opt picnic">
+        <input type="radio" name="date" id="opt-picnic" value="picnic">
+        <div class="art" aria-hidden="true">
+          <div class="dice"><i></i><i class="x"></i><i></i><i class="x"></i><i></i><i class="x"></i><i></i><i class="x"></i><i></i></div>
+        </div>
+        <span class="check" aria-hidden="true">✓</span>
+        <div class="body">
+          <span class="tag">Option A · Outdoors</span>
+          <h2>Picnic &amp; board games</h2>
+          <p>A blanket in the park, good snacks, and a few rounds of something competitive. Loser packs up the basket.</p>
+        </div>
+      </label>
+
+      <label class="opt paint">
+        <input type="radio" name="date" id="opt-paint" value="paint">
+        <div class="art" aria-hidden="true"><canvas id="splat"></canvas></div>
+        <span class="check" aria-hidden="true">✓</span>
+        <div class="body">
+          <span class="tag">Option B · Creative</span>
+          <h2>Paint &amp; sip</h2>
+          <p>Canvases, a glass of something nice, and a playlist we build together. No art skills required.</p>
+        </div>
+      </label>
+    </div>
+
+    <div class="extras" style="margin-top:18px">
+      <h3>A few details</h3>
+      <div class="field">
+        <span>Best time</span>
+        <div class="pills" role="radiogroup" aria-label="Best time">
+          <label class="pill"><input type="radio" name="time" id="t-afternoon" value="Afternoon" checked><span>Afternoon</span></label>
+          <label class="pill"><input type="radio" name="time" id="t-evening" value="Evening"><span>Evening</span></label>
+        </div>
+      </div>
+      <label class="field">
+        <span id="extra-label">A snack or game you want there</span>
+        <input type="text" id="extra" maxlength="120" placeholder="e.g. Uno, strawberries">
+        <span class="hint" id="extra-hint">Optional</span>
+      </label>
+      <label class="field">
+        <span>Anything else?</span>
+        <textarea id="note" maxlength="400" placeholder="Optional"></textarea>
+      </label>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:10px;margin-top:18px">
+      <button class="send" type="submit" id="send">Lock it in</button>
+      <p class="status" id="status" role="status"></p>
+    </div>
+  </form>
+
+  <section class="saved" id="saved" hidden>
+    <span class="tag">Answer received</span>
+    <b id="saved-title"></b>
+    <p id="saved-detail"></p>
+  </section>
+</main>
+
+<script>
+(function(){
+  const labels={picnic:"Picnic & board games",paint:"Paint & sip"};
+  const extraCopy={
+    picnic:["A snack or game you want there","e.g. Uno, strawberries"],
+    paint:["A song for our shared playlist","e.g. Song title – Artist"]
+  };
+  const $=id=>document.getElementById(id);
+  const form=$("form"), status=$("status"), send=$("send");
+
+  // Paint splatter art
+  function drawSplat(){
+    const c=$("splat"); if(!c) return;
+    const r=c.getBoundingClientRect(), dpr=window.devicePixelRatio||1;
+    c.width=r.width*dpr; c.height=r.height*dpr;
+    const x=c.getContext("2d"); x.scale(dpr,dpr);
+    const cs=getComputedStyle(document.documentElement);
+    const cols=[cs.getPropertyValue("--paint"),cs.getPropertyValue("--picnic"),cs.getPropertyValue("--sun"),cs.getPropertyValue("--ok")];
+    let s=7; const rnd=()=>((s=(s*9301+49297)%233280)/233280);
+    for(let i=0;i<22;i++){
+      x.fillStyle=cols[i%cols.length].trim(); x.globalAlpha=.75;
+      const px=rnd()*r.width, py=rnd()*r.height, rad=4+rnd()*20;
+      x.beginPath(); x.arc(px,py,rad,0,Math.PI*2); x.fill();
+      for(let j=0;j<4;j++){x.beginPath();x.arc(px+(rnd()-.5)*rad*3,py+(rnd()-.5)*rad*3,1+rnd()*3,0,Math.PI*2);x.fill();}
+    }
+  }
+  drawSplat(); addEventListener("resize",drawSplat);
+  try{matchMedia("(prefers-color-scheme: dark)").addEventListener("change",drawSplat)}catch(e){}
+
+  function updateExtra(){
+    const v=form.date.value; if(!v) return;
+    $("extra-label").textContent=extraCopy[v][0];
+    $("extra").placeholder=extraCopy[v][1];
+  }
+  form.addEventListener("change",e=>{if(e.target.name==="date") updateExtra();});
+
+  function showSaved(d){
+    if(!d||!d.choice) return;
+    $("saved").hidden=false;
+    $("saved-title").textContent=labels[d.choice]||d.choice;
+    const bits=[d.time];
+    if(d.extra) bits.push((d.choice==="paint"?"Song: ":"Bring: ")+d.extra);
+    if(d.note) bits.push("“"+d.note+"”");
+    $("saved-detail").textContent=bits.filter(Boolean).join(" · ");
+  }
+
+  function confetti(){
+    if(matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const c=$("confetti"), x=c.getContext("2d");
+    c.width=innerWidth; c.height=innerHeight;
+    const cs=getComputedStyle(document.documentElement);
+    const cols=["--picnic","--paint","--sun","--ok"].map(v=>cs.getPropertyValue(v).trim());
+    const ps=Array.from({length:120},()=>({x:innerWidth/2,y:innerHeight*.7,vx:(Math.random()-.5)*12,vy:-Math.random()*14-4,c:cols[Math.random()*4|0],s:4+Math.random()*5,r:Math.random()*6}));
+    let f=0;(function tick(){
+      x.clearRect(0,0,c.width,c.height);
+      ps.forEach(p=>{p.vy+=.35;p.x+=p.vx;p.y+=p.vy;p.r+=.1;x.save();x.translate(p.x,p.y);x.rotate(p.r);x.fillStyle=p.c;x.fillRect(-p.s/2,-p.s/2,p.s,p.s*.6);x.restore();});
+      if(++f<110) requestAnimationFrame(tick); else x.clearRect(0,0,c.width,c.height);
+    })();
+  }
+
+  form.addEventListener("submit",async e=>{
+    e.preventDefault();
+    status.className="status";
+    const choice=form.date.value;
+    if(!choice){status.className="status err";status.textContent="Pick one of the two dates first.";return;}
+    const data={choice,time:form.time.value||"",extra:$("extra").value.trim(),note:$("note").value.trim()};
+    const cfg=window.JOTFORM||{};
+    if(!cfg.formId||cfg.formId==="PASTE_FORM_ID"){
+      status.className="status err";
+      status.textContent="Almost ready! The Jotform form ID still needs to be added to config.js.";
+      return;
+    }
+    const fd=new FormData();
+    fd.append("formID",cfg.formId);
+    fd.append("simple_spc",cfg.formId+"-"+cfg.formId);
+    const f=cfg.fields||{};
+    if(f.date)  fd.append(f.date,  labels[choice]);
+    if(f.time)  fd.append(f.time,  data.time);
+    if(f.extra) fd.append(f.extra, data.extra);
+    if(f.note)  fd.append(f.note,  data.note);
+    send.disabled=true; status.textContent="Sending…";
+    try{
+      // Jotform doesn't allow reading the reply from another site, so a sent request counts as success.
+      await fetch("https://submit.jotform.com/submit/"+cfg.formId,{method:"POST",mode:"no-cors",body:fd});
+      status.textContent="Locked in. See you Sunday!";
+      showSaved(data); confetti();
+      form.querySelectorAll("input,textarea,button").forEach(el=>el.disabled=true);
+    }catch(err){
+      status.className="status err";
+      status.textContent="That didn't send. Check your connection and try again.";
+      send.disabled=false;
+    }
+  });
+})();
+</script>
+</body>
+</html>
