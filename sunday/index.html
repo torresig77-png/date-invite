@@ -8,11 +8,11 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shrikhand&family=Outfit:wght@400;500;600;700&display=swap">
 <style>
-/* Layout: one narrow column — headline, two big tappable date cards (gingham / paint), then a few playful extras and a send button. */
+/* Layout: one narrow column, three steps — pick the date, answer questions for that date, then time + send. */
 :root{
   --bg:#eef3ff; --ink:#1d2340; --muted:#5b6386; --card:#ffffff; --line:#d4dbf2;
   --picnic:#e8453c; --picnic-soft:#fde3e1; --paint:#6c4cf0; --paint-soft:#e9e3ff;
-  --sun:#ffc23d; --ok:#1f9d6b;
+  --sun:#ffc23d; --ok:#1f9d6b; --accent:var(--picnic);
   --display:"Shrikhand", "Cooper Black", Georgia, serif;
   --body:"Outfit", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
@@ -24,6 +24,7 @@
   --bg:#141831; --ink:#eef0ff; --muted:#a3a9cc; --card:#1e2344; --line:#343b66;
   --picnic:#ff6b62; --picnic-soft:#3a2230; --paint:#9c84ff; --paint-soft:#2b2654;
   --sun:#ffcf5c; --ok:#3fcf95; color-scheme:dark}
+body.is-paint{--accent:var(--paint)}
 
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -35,6 +36,18 @@ h1{font-family:var(--display);font-weight:400;font-size:clamp(2.3rem,9vw,3.2rem)
 h1 em{font-style:normal;color:var(--picnic)}
 .lede{margin:8px 0 0;color:var(--muted);max-width:42ch}
 
+/* progress */
+.progress{display:flex;gap:6px;align-items:center}
+.progress i{flex:1;height:8px;border-radius:999px;background:var(--line);transition:background .25s ease}
+.progress i.on{background:var(--accent)}
+.stepnum{font-size:.85rem;font-weight:600;color:var(--muted);margin-left:8px;white-space:nowrap;font-variant-numeric:tabular-nums}
+
+.step{display:flex;flex-direction:column;gap:18px;animation:in .3s ease}
+@keyframes in{from{transform:translateY(8px);opacity:.4}to{transform:none;opacity:1}}
+.step h2.title{font-family:var(--display);font-weight:400;font-size:1.8rem;line-height:1.1;margin:0;text-wrap:balance}
+.step h2.title em{font-style:normal;color:var(--accent)}
+
+/* date cards */
 .choices{display:grid;gap:14px}
 .opt{position:relative;display:block;cursor:pointer;border-radius:20px;border:2px solid var(--line);background:var(--card);overflow:hidden;transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease}
 .opt input{position:absolute;opacity:0;pointer-events:none}
@@ -50,11 +63,10 @@ h1 em{font-style:normal;color:var(--picnic)}
 .dice{position:absolute;right:18px;bottom:-18px;width:54px;height:54px;border-radius:12px;background:var(--card);border:2px solid var(--ink);display:grid;grid-template-columns:repeat(3,1fr);padding:8px;gap:2px;transform:rotate(-10deg)}
 .dice i{width:8px;height:8px;border-radius:50%;background:var(--ink);place-self:center}
 .dice i.x{background:transparent}
-.glass{position:absolute;right:20px;bottom:-14px;font-size:0}
-.body{padding:18px 18px 18px;display:flex;flex-direction:column;gap:6px}
+.cbody{padding:18px;display:flex;flex-direction:column;gap:6px}
 .tag{font-size:.75rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
 .picnic .tag{color:var(--picnic)} .paint .tag{color:var(--paint)}
-.opt h2{font-family:var(--display);font-weight:400;font-size:1.6rem;line-height:1.1;margin:0}
+.opt h3{font-family:var(--display);font-weight:400;font-size:1.6rem;line-height:1.1;margin:0}
 .opt p{margin:0;color:var(--muted);font-size:.95rem}
 .check{position:absolute;top:12px;left:12px;width:34px;height:34px;border-radius:50%;background:var(--card);border:2px solid var(--line);display:grid;place-items:center;font-weight:700;color:transparent;transition:all .15s ease}
 .picnic:has(input:checked){border-color:var(--picnic);box-shadow:0 8px 0 -2px var(--picnic)}
@@ -62,129 +74,218 @@ h1 em{font-style:normal;color:var(--picnic)}
 .picnic:has(input:checked) .check{background:var(--picnic);border-color:var(--picnic);color:#fff}
 .paint:has(input:checked) .check{background:var(--paint);border-color:var(--paint);color:#fff}
 
-.extras{display:flex;flex-direction:column;gap:16px;background:var(--card);border:2px solid var(--line);border-radius:20px;padding:18px}
-.extras h3{margin:0;font-family:var(--display);font-weight:400;font-size:1.3rem}
-.field{display:flex;flex-direction:column;gap:8px}
-.field > span{font-weight:600}
+/* question cards */
+.q{display:flex;flex-direction:column;gap:10px;background:var(--card);border:2px solid var(--line);border-radius:20px;padding:18px}
+.q legend,.q .qt{font-weight:700;font-size:1.05rem;padding:0}
+.q .hint{font-size:.85rem;color:var(--muted);margin:-6px 0 0}
+fieldset.q{margin:0;min-width:0}
+fieldset.q legend{float:left;width:100%;margin-bottom:10px}
+fieldset.q legend + *{clear:both}
 .pills{display:flex;flex-wrap:wrap;gap:8px}
 .pill{position:relative}
 .pill input{position:absolute;opacity:0}
-.pill span{display:inline-block;padding:8px 14px;border-radius:999px;border:2px solid var(--line);font-weight:500;cursor:pointer}
-.pill input:checked + span{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.pill span{display:inline-block;padding:8px 14px;border-radius:999px;border:2px solid var(--line);font-weight:500;cursor:pointer;transition:all .12s ease}
+.pill input:checked + span{background:var(--accent);color:#fff;border-color:var(--accent)}
 .pill input:focus-visible + span{outline:3px solid var(--sun);outline-offset:2px}
 input[type=text],textarea{font:inherit;color:var(--ink);background:var(--bg);border:2px solid var(--line);border-radius:12px;padding:10px 12px;width:100%}
-input[type=text]:focus,textarea:focus{outline:none;border-color:var(--paint)}
+input[type=text]:focus,textarea:focus{outline:none;border-color:var(--accent)}
 textarea{resize:vertical;min-height:72px}
-.hint{font-size:.85rem;color:var(--muted)}
 
-.send{font:inherit;font-family:var(--display);font-size:1.35rem;border:none;border-radius:16px;padding:14px 18px;background:var(--ink);color:var(--bg);cursor:pointer;box-shadow:0 6px 0 var(--sun);transition:transform .1s ease}
-.send:active{transform:translateY(3px);box-shadow:0 3px 0 var(--sun)}
-.send:disabled{opacity:.5;cursor:not-allowed}
-.send:focus-visible{outline:3px solid var(--paint);outline-offset:3px}
+/* nav */
+.nav{display:flex;gap:10px;align-items:center}
+.btn{font:inherit;font-family:var(--display);font-size:1.3rem;border:none;border-radius:16px;padding:14px 18px;background:var(--ink);color:var(--bg);cursor:pointer;box-shadow:0 6px 0 var(--sun);transition:transform .1s ease;flex:1}
+.btn:active{transform:translateY(3px);box-shadow:0 3px 0 var(--sun)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn:focus-visible,.back:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.back{font:inherit;font-weight:600;background:none;border:2px solid var(--line);color:var(--ink);border-radius:16px;padding:14px 16px;cursor:pointer}
 .status{font-weight:500;min-height:1.5em;margin:0}
 .status.err{color:var(--picnic)}
 
-.saved{border-radius:20px;padding:18px;background:var(--card);border:2px dashed var(--ok);display:flex;flex-direction:column;gap:6px}
-.saved .tag{color:var(--ok)}
-.saved b{font-family:var(--display);font-weight:400;font-size:1.4rem}
-.saved p{margin:0;color:var(--muted)}
+/* recap + done */
+.recap{border-radius:20px;padding:18px;background:var(--card);border:2px dashed var(--accent);display:flex;flex-direction:column;gap:8px}
+.recap dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 14px}
+.recap dt{font-weight:700;color:var(--muted);font-size:.9rem}
+.recap dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.done{text-align:left;display:flex;flex-direction:column;gap:12px}
+.done .big{font-family:var(--display);font-size:clamp(2.2rem,9vw,3rem);line-height:1.05;margin:0;color:var(--accent)}
 
 .confetti{position:fixed;inset:0;pointer-events:none;z-index:5}
-@media (prefers-reduced-motion: reduce){.opt,.send,.check{transition:none}.opt:hover{transform:none}}
+@media (prefers-reduced-motion: reduce){.opt,.btn,.check,.pill span,.progress i{transition:none}.opt:hover{transform:none}.step{animation:none}}
 </style>
 </head>
 <body>
-
 <script src="config.js"></script>
 <canvas class="confetti" id="confetti" aria-hidden="true"></canvas>
 <main class="wrap">
   <header>
     <div class="eyebrow"><span class="dot"></span>Sunday, October 11</div>
     <h1>Pick our <em>Sunday</em> date</h1>
-    <p class="lede">Two plans, both ready to go. Tap the one you're feeling and I'll handle the rest.</p>
+    <p class="lede">Two plans, both ready to go. Choose one, tell me how you want it, and I'll handle the rest.</p>
   </header>
 
+  <div class="progress" aria-hidden="true"><i id="p1" class="on"></i><i id="p2"></i><i id="p3"></i><span class="stepnum" id="stepnum">Step 1 of 3</span></div>
+
   <form id="form" novalidate>
-    <div class="choices" role="radiogroup" aria-label="Date idea">
-      <label class="opt picnic">
-        <input type="radio" name="date" id="opt-picnic" value="picnic">
-        <div class="art" aria-hidden="true">
-          <div class="dice"><i></i><i class="x"></i><i></i><i class="x"></i><i></i><i class="x"></i><i></i><i class="x"></i><i></i></div>
-        </div>
-        <span class="check" aria-hidden="true">✓</span>
-        <div class="body">
-          <span class="tag">Option A · Outdoors</span>
-          <h2>Picnic &amp; board games</h2>
-          <p>A blanket in the park, good snacks, and a few rounds of something competitive. Loser packs up the basket.</p>
-        </div>
-      </label>
+    <!-- STEP 1 -->
+    <section class="step" id="step1">
+      <div class="choices" role="radiogroup" aria-label="Date idea">
+        <label class="opt picnic">
+          <input type="radio" name="date" id="opt-picnic" value="picnic">
+          <div class="art" aria-hidden="true">
+            <div class="dice"><i></i><i class="x"></i><i></i><i class="x"></i><i></i><i class="x"></i><i></i><i class="x"></i><i></i></div>
+          </div>
+          <span class="check" aria-hidden="true">✓</span>
+          <div class="cbody">
+            <span class="tag">Option A · Outdoors</span>
+            <h3>Picnic &amp; board games</h3>
+            <p>A blanket in the park, good snacks, and a few rounds of something competitive. Loser packs up the basket.</p>
+          </div>
+        </label>
+        <label class="opt paint">
+          <input type="radio" name="date" id="opt-paint" value="paint">
+          <div class="art" aria-hidden="true"><canvas id="splat"></canvas></div>
+          <span class="check" aria-hidden="true">✓</span>
+          <div class="cbody">
+            <span class="tag">Option B · Creative</span>
+            <h3>Paint &amp; sip</h3>
+            <p>Canvases, a glass of something nice, and a playlist we build together. No art skills required.</p>
+          </div>
+        </label>
+      </div>
+      <div class="nav"><button type="button" class="btn" id="next1">Next</button></div>
+    </section>
 
-      <label class="opt paint">
-        <input type="radio" name="date" id="opt-paint" value="paint">
-        <div class="art" aria-hidden="true"><canvas id="splat"></canvas></div>
-        <span class="check" aria-hidden="true">✓</span>
-        <div class="body">
-          <span class="tag">Option B · Creative</span>
-          <h2>Paint &amp; sip</h2>
-          <p>Canvases, a glass of something nice, and a playlist we build together. No art skills required.</p>
+    <!-- STEP 2: PICNIC -->
+    <section class="step" id="step2-picnic" hidden>
+      <h2 class="title">Let's plan the <em>picnic</em></h2>
+      <fieldset class="q">
+        <legend>Which games are we playing?</legend>
+        <p class="hint">Pick as many as you want.</p>
+        <div class="pills">
+          <label class="pill"><input type="checkbox" name="games" id="g-uno" value="Uno"><span>Uno</span></label>
+          <label class="pill"><input type="checkbox" name="games" id="g-connect4" value="Connect 4"><span>Connect 4</span></label>
+          <label class="pill"><input type="checkbox" name="games" id="g-jenga" value="Jenga"><span>Jenga</span></label>
+          <label class="pill"><input type="checkbox" name="games" id="g-scrabble" value="Scrabble"><span>Scrabble</span></label>
+          <label class="pill"><input type="checkbox" name="games" id="g-codenames" value="Codenames Duet"><span>Codenames Duet</span></label>
+          <label class="pill"><input type="checkbox" name="games" id="g-cards" value="Card games"><span>Card games</span></label>
+          <label class="pill"><input type="checkbox" name="games" id="g-chess" value="Chess"><span>Chess</span></label>
         </div>
-      </label>
-    </div>
+        <input type="text" id="games-other" maxlength="80" placeholder="Something else? Type it here">
+      </fieldset>
+      <fieldset class="q">
+        <legend>What snacks should I pack?</legend>
+        <p class="hint">Pick as many as you want.</p>
+        <div class="pills">
+          <label class="pill"><input type="checkbox" name="snacks" id="s-charc" value="Charcuterie board"><span>Charcuterie board</span></label>
+          <label class="pill"><input type="checkbox" name="snacks" id="s-fruit" value="Fresh fruit"><span>Fresh fruit</span></label>
+          <label class="pill"><input type="checkbox" name="snacks" id="s-sand" value="Sandwiches"><span>Sandwiches</span></label>
+          <label class="pill"><input type="checkbox" name="snacks" id="s-chips" value="Chips & dip"><span>Chips &amp; dip</span></label>
+          <label class="pill"><input type="checkbox" name="snacks" id="s-sweets" value="Sweets"><span>Sweets</span></label>
+          <label class="pill"><input type="checkbox" name="snacks" id="s-cookies" value="Cookies"><span>Cookies</span></label>
+        </div>
+        <input type="text" id="snacks-other" maxlength="80" placeholder="A favorite I should grab?">
+      </fieldset>
+      <fieldset class="q">
+        <legend>And to drink?</legend>
+        <div class="pills">
+          <label class="pill"><input type="radio" name="picnicDrink" id="pd-lemon" value="Lemonade"><span>Lemonade</span></label>
+          <label class="pill"><input type="radio" name="picnicDrink" id="pd-tea" value="Iced tea"><span>Iced tea</span></label>
+          <label class="pill"><input type="radio" name="picnicDrink" id="pd-wine" value="Wine"><span>Wine</span></label>
+          <label class="pill"><input type="radio" name="picnicDrink" id="pd-sparkle" value="Sparkling water"><span>Sparkling water</span></label>
+        </div>
+      </fieldset>
+      <div class="nav"><button type="button" class="back" data-back="1">Back</button><button type="button" class="btn" data-next="3">Next</button></div>
+    </section>
 
-    <div class="extras" style="margin-top:18px">
-      <h3>A few details</h3>
-      <div class="field">
-        <span>Best time</span>
-        <div class="pills" role="radiogroup" aria-label="Best time">
+    <!-- STEP 2: PAINT -->
+    <section class="step" id="step2-paint" hidden>
+      <h2 class="title">Let's plan the <em>paint &amp; sip</em></h2>
+      <fieldset class="q">
+        <legend>What should we paint?</legend>
+        <div class="pills">
+          <label class="pill"><input type="radio" name="subject" id="ps-sunset" value="A sunset"><span>A sunset</span></label>
+          <label class="pill"><input type="radio" name="subject" id="ps-flowers" value="Flowers"><span>Flowers</span></label>
+          <label class="pill"><input type="radio" name="subject" id="ps-portraits" value="Each other"><span>Each other</span></label>
+          <label class="pill"><input type="radio" name="subject" id="ps-abstract" value="Something abstract"><span>Something abstract</span></label>
+          <label class="pill"><input type="radio" name="subject" id="ps-surprise" value="Surprise me"><span>Surprise me</span></label>
+        </div>
+      </fieldset>
+      <fieldset class="q">
+        <legend>What are we sipping?</legend>
+        <div class="pills">
+          <label class="pill"><input type="radio" name="paintDrink" id="dd-red" value="Red wine"><span>Red wine</span></label>
+          <label class="pill"><input type="radio" name="paintDrink" id="dd-white" value="White or rosé"><span>White or rosé</span></label>
+          <label class="pill"><input type="radio" name="paintDrink" id="dd-sangria" value="Sangria"><span>Sangria</span></label>
+          <label class="pill"><input type="radio" name="paintDrink" id="dd-mock" value="Mocktail"><span>Mocktail</span></label>
+        </div>
+      </fieldset>
+      <fieldset class="q">
+        <legend>Playlist vibe</legend>
+        <p class="hint">Pick as many as you want.</p>
+        <div class="pills">
+          <label class="pill"><input type="checkbox" name="vibe" id="v-rnb" value="R&B"><span>R&amp;B</span></label>
+          <label class="pill"><input type="checkbox" name="vibe" id="v-pop" value="Pop"><span>Pop</span></label>
+          <label class="pill"><input type="checkbox" name="vibe" id="v-latin" value="Latin"><span>Latin</span></label>
+          <label class="pill"><input type="checkbox" name="vibe" id="v-indie" value="Indie"><span>Indie</span></label>
+          <label class="pill"><input type="checkbox" name="vibe" id="v-throw" value="Throwbacks"><span>Throwbacks</span></label>
+          <label class="pill"><input type="checkbox" name="vibe" id="v-hiphop" value="Hip-hop"><span>Hip-hop</span></label>
+        </div>
+      </fieldset>
+      <div class="q">
+        <label class="qt" for="song1">Add two songs to our playlist</label>
+        <input type="text" id="song1" maxlength="100" placeholder="Song – Artist">
+        <input type="text" id="song2" maxlength="100" placeholder="Song – Artist" aria-label="Second song">
+      </div>
+      <div class="nav"><button type="button" class="back" data-back="1">Back</button><button type="button" class="btn" data-next="3">Next</button></div>
+    </section>
+
+    <!-- STEP 3 -->
+    <section class="step" id="step3" hidden>
+      <h2 class="title">Last thing: <em>when?</em></h2>
+      <fieldset class="q">
+        <legend>Best time on Sunday</legend>
+        <div class="pills">
           <label class="pill"><input type="radio" name="time" id="t-afternoon" value="Afternoon" checked><span>Afternoon</span></label>
           <label class="pill"><input type="radio" name="time" id="t-evening" value="Evening"><span>Evening</span></label>
         </div>
-      </div>
-      <label class="field">
-        <span id="extra-label">A snack or game you want there</span>
-        <input type="text" id="extra" maxlength="120" placeholder="e.g. Uno, strawberries">
-        <span class="hint" id="extra-hint">Optional</span>
-      </label>
-      <label class="field">
-        <span>Anything else?</span>
+      </fieldset>
+      <div class="q">
+        <label class="qt" for="note">Anything else I should know?</label>
         <textarea id="note" maxlength="400" placeholder="Optional"></textarea>
-      </label>
-    </div>
-
-    <div style="display:flex;flex-direction:column;gap:10px;margin-top:18px">
-      <button class="send" type="submit" id="send">Lock it in</button>
+      </div>
+      <div class="recap" id="recap"><span class="tag" style="color:var(--accent)">Your plan so far</span><dl id="recap-list"></dl></div>
+      <div class="nav"><button type="button" class="back" id="back3">Back</button><button type="submit" class="btn" id="send">Lock it in</button></div>
       <p class="status" id="status" role="status"></p>
-    </div>
-  </form>
+    </section>
 
-  <section class="saved" id="saved" hidden>
-    <span class="tag">Answer received</span>
-    <b id="saved-title"></b>
-    <p id="saved-detail"></p>
-  </section>
+    <!-- DONE -->
+    <section class="step done" id="done" hidden>
+      <p class="big">It's a date!</p>
+      <p class="lede" id="done-line"></p>
+      <div class="recap"><span class="tag" style="color:var(--accent)">The plan</span><dl id="done-list"></dl></div>
+    </section>
+  </form>
 </main>
 
 <script>
 (function(){
-  const labels={picnic:"Picnic & board games",paint:"Paint & sip"};
-  const extraCopy={
-    picnic:["A snack or game you want there","e.g. Uno, strawberries"],
-    paint:["A song for our shared playlist","e.g. Song title – Artist"]
-  };
   const $=id=>document.getElementById(id);
-  const form=$("form"), status=$("status"), send=$("send");
+  const form=$("form"), status=$("status");
+  const labels={picnic:"Picnic & board games",paint:"Paint & sip"};
+  let current="1";
 
-  // Paint splatter art
+  // paint splatter art
   function drawSplat(){
     const c=$("splat"); if(!c) return;
-    const r=c.getBoundingClientRect(), dpr=window.devicePixelRatio||1;
+    const r=c.getBoundingClientRect(); if(!r.width) return;
+    const dpr=window.devicePixelRatio||1;
     c.width=r.width*dpr; c.height=r.height*dpr;
     const x=c.getContext("2d"); x.scale(dpr,dpr);
     const cs=getComputedStyle(document.documentElement);
-    const cols=[cs.getPropertyValue("--paint"),cs.getPropertyValue("--picnic"),cs.getPropertyValue("--sun"),cs.getPropertyValue("--ok")];
+    const cols=["--paint","--picnic","--sun","--ok"].map(v=>cs.getPropertyValue(v).trim());
     let s=7; const rnd=()=>((s=(s*9301+49297)%233280)/233280);
     for(let i=0;i<22;i++){
-      x.fillStyle=cols[i%cols.length].trim(); x.globalAlpha=.75;
+      x.fillStyle=cols[i%cols.length]; x.globalAlpha=.75;
       const px=rnd()*r.width, py=rnd()*r.height, rad=4+rnd()*20;
       x.beginPath(); x.arc(px,py,rad,0,Math.PI*2); x.fill();
       for(let j=0;j<4;j++){x.beginPath();x.arc(px+(rnd()-.5)*rad*3,py+(rnd()-.5)*rad*3,1+rnd()*3,0,Math.PI*2);x.fill();}
@@ -193,22 +294,69 @@ textarea{resize:vertical;min-height:72px}
   drawSplat(); addEventListener("resize",drawSplat);
   try{matchMedia("(prefers-color-scheme: dark)").addEventListener("change",drawSplat)}catch(e){}
 
-  function updateExtra(){
-    const v=form.date.value; if(!v) return;
-    $("extra-label").textContent=extraCopy[v][0];
-    $("extra").placeholder=extraCopy[v][1];
-  }
-  form.addEventListener("change",e=>{if(e.target.name==="date") updateExtra();});
+  const checked=name=>[...form.querySelectorAll('input[name="'+name+'"]:checked')].map(i=>i.value);
+  const one=name=>(form.querySelector('input[name="'+name+'"]:checked')||{}).value||"";
+  const withOther=(list,id)=>{const o=$(id).value.trim();return o?list.concat(o):list;};
 
-  function showSaved(d){
-    if(!d||!d.choice) return;
-    $("saved").hidden=false;
-    $("saved-title").textContent=labels[d.choice]||d.choice;
-    const bits=[d.time];
-    if(d.extra) bits.push((d.choice==="paint"?"Song: ":"Bring: ")+d.extra);
-    if(d.note) bits.push("“"+d.note+"”");
-    $("saved-detail").textContent=bits.filter(Boolean).join(" · ");
+  function answers(){
+    const choice=one("date");
+    const a=[["Date",labels[choice]||""]];
+    if(choice==="picnic"){
+      a.push(["Games",withOther(checked("games"),"games-other").join(", ")]);
+      a.push(["Snacks",withOther(checked("snacks"),"snacks-other").join(", ")]);
+      a.push(["Drink",one("picnicDrink")]);
+    }else if(choice==="paint"){
+      a.push(["Painting",one("subject")]);
+      a.push(["Drink",one("paintDrink")]);
+      a.push(["Playlist vibe",checked("vibe").join(", ")]);
+      a.push(["Songs",[$("song1").value.trim(),$("song2").value.trim()].filter(Boolean).join(" / ")]);
+    }
+    a.push(["Time",one("time")]);
+    const note=$("note").value.trim(); if(note) a.push(["Note",note]);
+    return a;
   }
+  function fillList(dl){
+    dl.textContent="";
+    answers().forEach(([k,v])=>{
+      const dt=document.createElement("dt"); dt.textContent=k;
+      const dd=document.createElement("dd"); dd.textContent=v||"—";
+      dl.append(dt,dd);
+    });
+  }
+
+  function show(step){
+    current=step;
+    const choice=one("date");
+    ["step1","step2-picnic","step2-paint","step3","done"].forEach(id=>$(id).hidden=true);
+    const id=step==="2"?"step2-"+choice:step==="1"?"step1":step==="3"?"step3":"done";
+    $(id).hidden=false;
+    const n=step==="done"?3:Number(step);
+    [1,2,3].forEach(i=>$("p"+i).classList.toggle("on",i<=n));
+    $("stepnum").textContent=step==="done"?"All set":"Step "+n+" of 3";
+    if(step==="3") fillList($("recap-list"));
+    if(step==="1") requestAnimationFrame(drawSplat);
+    status.textContent=""; status.className="status";
+    const top=document.querySelector(".progress");
+    if(step!=="1") top.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});
+  }
+
+  form.addEventListener("change",e=>{
+    if(e.target.name==="date") document.body.classList.toggle("is-paint",e.target.value==="paint");
+    if(current==="3") fillList($("recap-list"));
+  });
+  $("note").addEventListener("input",()=>fillList($("recap-list")));
+
+  $("next1").addEventListener("click",()=>{
+    if(!one("date")){
+      $("next1").textContent="Pick one first";
+      setTimeout(()=>$("next1").textContent="Next",1400);
+      return;
+    }
+    show("2");
+  });
+  form.querySelectorAll("[data-next]").forEach(b=>b.addEventListener("click",()=>show(b.dataset.next)));
+  form.querySelectorAll("[data-back]").forEach(b=>b.addEventListener("click",()=>show(b.dataset.back)));
+  $("back3").addEventListener("click",()=>show("2"));
 
   function confetti(){
     if(matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -216,37 +364,34 @@ textarea{resize:vertical;min-height:72px}
     c.width=innerWidth; c.height=innerHeight;
     const cs=getComputedStyle(document.documentElement);
     const cols=["--picnic","--paint","--sun","--ok"].map(v=>cs.getPropertyValue(v).trim());
-    const ps=Array.from({length:120},()=>({x:innerWidth/2,y:innerHeight*.7,vx:(Math.random()-.5)*12,vy:-Math.random()*14-4,c:cols[Math.random()*4|0],s:4+Math.random()*5,r:Math.random()*6}));
+    const ps=Array.from({length:130},()=>({x:innerWidth/2,y:innerHeight*.6,vx:(Math.random()-.5)*13,vy:-Math.random()*14-4,c:cols[Math.random()*4|0],s:4+Math.random()*5,r:Math.random()*6}));
     let f=0;(function tick(){
       x.clearRect(0,0,c.width,c.height);
       ps.forEach(p=>{p.vy+=.35;p.x+=p.vx;p.y+=p.vy;p.r+=.1;x.save();x.translate(p.x,p.y);x.rotate(p.r);x.fillStyle=p.c;x.fillRect(-p.s/2,-p.s/2,p.s,p.s*.6);x.restore();});
-      if(++f<110) requestAnimationFrame(tick); else x.clearRect(0,0,c.width,c.height);
+      if(++f<120) requestAnimationFrame(tick); else x.clearRect(0,0,c.width,c.height);
     })();
   }
 
   form.addEventListener("submit",async e=>{
     e.preventDefault();
-    status.className="status";
-    const choice=form.date.value;
-    if(!choice){status.className="status err";status.textContent="Pick one of the two dates first.";return;}
-    const data={choice,time:form.time.value||"",extra:$("extra").value.trim(),note:$("note").value.trim()};
-    const endpoint=window.FORMSPREE_URL;
+    if(current!=="3") return;
+    const choice=one("date");
     const fd=new FormData();
-    fd.append("Date pick",labels[choice]);
-    fd.append("Best time",data.time);
-    fd.append(choice==="paint"?"Playlist song":"Snack or game",data.extra||"—");
-    fd.append("Anything else",data.note||"—");
-    fd.append("_subject","Sunday date pick: "+labels[choice]+" ("+data.time+")");
-    send.disabled=true; status.textContent="Sending…";
+    answers().forEach(([k,v])=>fd.append(k,v||"—"));
+    fd.append("_subject","Sunday date pick: "+labels[choice]+" ("+one("time")+")");
+    const send=$("send");
+    send.disabled=true; status.className="status"; status.textContent="Sending…";
     try{
-      const res=await fetch(endpoint,{method:"POST",body:fd,headers:{Accept:"application/json"}});
-      if(!res.ok) throw new Error("bad status "+res.status);
-      status.textContent="Locked in. See you Sunday!";
-      showSaved(data); confetti();
-      form.querySelectorAll("input,textarea,button").forEach(el=>el.disabled=true);
+      const res=await fetch(window.FORMSPREE_URL,{method:"POST",body:fd,headers:{Accept:"application/json"}});
+      if(!res.ok) throw new Error("status "+res.status);
+      fillList($("done-list"));
+      $("done-line").textContent=choice==="picnic"
+        ? "Blanket, games and snacks are on me. See you Sunday."
+        : "Canvases, drinks and the playlist are on me. See you Sunday.";
+      show("done"); confetti();
     }catch(err){
       status.className="status err";
-      status.textContent="That didn't send. Check your connection and try again.";
+      status.textContent="That didn't send. Check your connection and tap Lock it in again.";
       send.disabled=false;
     }
   });
